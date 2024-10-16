@@ -1,0 +1,5 @@
+/oauth
+(POL)
+(GPL)
+/vehiclePosition
+/vehicleStateReply
