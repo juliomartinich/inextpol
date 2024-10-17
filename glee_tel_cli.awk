@@ -9,7 +9,7 @@
 #
 # el bloque BEGIN se ejecuta una sola vez, lo uso para poner los titulos, con ; para que sea un archivo csv leible en excel
 BEGIN { 
-    print "log;fechahora;mseg;tipo;tiponum;metodo;api;apisola;httpstatus;host;msgId;version;timeStamp;subOrgID;requestID;licensePlate;syncrotessDeliveryNumber";
+    print "log;fechahora;mseg;tipo;tiponum;metodo;api;apisola;httpstatus;host;msgId;version;timeStamp;subOrgID;requestID;licensePlate;syncrotessDeliveryNumber;syncrotessDeliveryNumberCancel;orderSubType;locationID;reasonCode";
 }
 #
 # este bloque se ejecuta para cada línea de entrada, $0 es la línea completa, $1, $2, ... son los tokens separados por espacio
@@ -89,20 +89,35 @@ BEGIN {
             vehicleNumber = resultado[1];
         } else { vehicleNumber = ""; }
     
-        # syncrotessDeliveryNumber (lo que está entre comillas y que no sea comillas)
-        if (match(linea, /"syncrotessDeliveryNumber":"([^"]+)"/, resultado)) {
-            syncrotessDeliveryNumber = resultado[1];
-        } else { syncrotessDeliveryNumber = ""; }
+        # orderSubType (lo que está entre comillas y que no sea comillas)
+        if (match(linea, /"orderSubType":"([^"]+)"/, resultado)) {
+            orderSubType = resultado[1];
+        } else { orderSubType = ""; }
+    
+        # LocationID (lo que está entre comillas y que no sea comillas)
+        if (match(linea, /"locationID":"([^"]+)"/, resultado)) {
+            locationID = resultado[1];
+        } else { locationID = ""; }
+    
+        # reasonCode (lo que está entre comillas y que no sea comillas)
+        if (match(linea, /"reasonCode":"([^"]+)"/, resultado)) {
+            reasonCode = resultado[1];
+        } else { reasonCode = ""; }
     
         # syncrotessDeliveryNumber en cancel (lo que está entre comillas y que no sea comillas)
         if (match(linea, /"syncrotessDeliveryNumber":\["([^"]+)"\]/, resultado)) {
-            syncrotessDeliveryNumberCancel = resultado[1];
-        } else { syncrotessDeliveryNumberCancel = ""; }
+            syncrotessDeliveryNumberCancel= resultado[1];
+        } else { syncrotessDeliveryNumberCancel= ""; }
     
-        if ( syncrotessDeliveryNumber == "" ) {
-       syncrotessDeliveryNumber = syncrotessDeliveryNumberCancel;
-        }
+        # syncrotessDeliveryNumber en assignment (lo que está entre comillas y que no sea comillas)
+        if (match(linea, /"syncrotessDeliveryNumber":"([^"]+)"/, resultado)) {
+            syncrotessDeliveryNumber= resultado[1];
+        } else { syncrotessDeliveryNumber= ""; }
 
+        if ( syncrotessDeliveryNumber == "" ) {
+            syncrotessDeliveryNumber = syncrotessDeliveryNumberCancel;
+        }
+    
        # me quedo con las variables guardadas y voy a la siguiente linea, que debe ser la respuesta
         next;
     }
@@ -117,7 +132,7 @@ BEGIN {
         } else { httpstatus = ""; }
 
         # imprimo en una linea todos los datos separados por ; para que funcione como archivo csv
-        print "STo;" fechahora ";" tipo ";" tiponum ";" metodo ";" api ";" apisola ";" httpstatus ";" host ";" msgId ";" sttVersion ";" timeStamp ";" subOrgID ";" requestID ";" vehicleNumber ";" syncrotessDeliveryNumber ";" syncrotessDeliveryNumberCancel ;
+        print "STo;" fechahora ";" tipo ";" tiponum ";" metodo ";" api ";" apisola ";" httpstatus ";" host ";" msgId ";" sttVersion ";" timeStamp ";" subOrgID ";" requestID ";" vehicleNumber ";" syncrotessDeliveryNumber ";" syncrotessDeliveryNumberCancel ";" orderSubType ";" locationID ";" reasonCode;
     }
 
 }
