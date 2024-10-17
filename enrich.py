@@ -6,8 +6,10 @@
 import numpy as py
 import pandas as pd
 
-# leo todos los archivos
-log = pd.read_csv("logconsolidado.csv", delimiter=";", low_memory=False)
+# leo todos los archivos, la primera columna trae el indice que se exportó, lo renombro como ID
+log = pd.read_csv("logconsolidado.csv", delimiter=";", low_memory=False, index_col=0)
+log.reset_index(inplace=True)
+log.rename(columns={'index': 'ID'}, inplace=True)
 
 log['rtruck'] = ''
 license_to_truck = {}
@@ -102,13 +104,18 @@ log_merged = pd.merge(log, etapas[['log', 'apisola', 'status', 'deliveryType', '
                          on=['log', 'apisola', 'status', 'deliveryType'],
                          how='left')  # 'left' mantiene todas las filas de logord
 
-columns_to_move = ['log','fechahora','mseg','S','F','T','etapa','estado','rtruck','licensePlate','SIGU','orderNo','erpTicketNumber','rsdn','shipPoint','deliveryQuantity','nrofunc', 'metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType','detail']
+columns_to_move = ['ID', 'log','fechahora','mseg','S','F','T','etapa','estado','rtruck','truckId','SIGU','orderNo','erpTicketNumber','orderSubType','rsdn','syncrotessDeliveryNumber','shipPoint','locationID','deliveryQuantity','reuseQuantity','reasonCode','nrofunc','licensePlate','metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType','detail']
 remaining_columns = [col for col in log.columns if col not in columns_to_move]
 new_column_order = columns_to_move + remaining_columns
 
 logord = log_merged[new_column_order]
 
+# rtruck decimal point is comma
+print("cambio punto decimal por coma en rtruck")
+logord['rtruck'] = logord['rtruck'].apply(lambda x: x.replace('.', ',') if isinstance(x, str) and x else x)
+
+
 print("el resultado queda en logenrich.csv")
 print("-------------------------------------------")
-logord.to_csv("logenrich.csv", sep=";", header=True, na_rep="")
+logord.to_csv("logenrich.csv", sep=";", decimal=",", header=True, na_rep="", index=False)
 

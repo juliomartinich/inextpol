@@ -174,4 +174,4 @@ del merged_df
 print(" ")
 print("el resultado queda en logconsolidado.csv")
 print("---------------------------------")
-df.to_csv('logconsolidado.csv', sep=';', quotechar='"', quoting=1, header=True, na_rep='')
+df.to_csv('logconsolidado.csv', sep=';', quotechar='"', quoting=1, decimal=',', header=True, na_rep='')
