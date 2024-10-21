@@ -50,6 +50,8 @@ trackit.columns = ["truckId","descequipo","nrofunc","nombre","apellido","erpTick
 trackit["log"] = "TR"
 trackit["T"] = "T"
 trackit["fechahora"]= pd.to_datetime(trackit["fechahora"])
+trackit["latitude"] = trackit["latitude"].apply(lambda x: str(x).replace('.', ',') if pd.notna(x) else x)
+trackit["longitude"] = trackit["longitude"].apply(lambda x: str(x).replace('.', ',') if pd.notna(x) else x)
 # Imprimo min y max de fechas
 min_fecha = trackit['fechahora'].min()
 max_fecha = trackit['fechahora'].max()
