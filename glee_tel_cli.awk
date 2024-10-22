@@ -9,7 +9,7 @@
 #
 # el bloque BEGIN se ejecuta una sola vez, lo uso para poner los titulos, con ; para que sea un archivo csv leible en excel
 BEGIN { 
-    print "log;fechahora;mseg;tipo;tiponum;metodo;api;apisola;httpstatus;host;msgId;version;timeStamp;subOrgID;requestID;licensePlate;syncrotessDeliveryNumber;syncrotessDeliveryNumberCancel;orderSubType;locationID;reasonCode";
+    print "log;fechahora;mseg;tipo;tiponum;metodo;api;apisola;httpstatus;host;msgId;version;timeStamp;subOrgID;requestID;licensePlate;syncrotessDeliveryNumber;syncrotessDeliveryNumberCancel;orderSubType;locationID;reasonCode;radius;latitude;longitude";
 }
 #
 # este bloque se ejecuta para cada línea de entrada, $0 es la línea completa, $1, $2, ... son los tokens separados por espacio
@@ -117,6 +117,25 @@ BEGIN {
         if ( syncrotessDeliveryNumber == "" ) {
             syncrotessDeliveryNumber = syncrotessDeliveryNumberCancel;
         }
+
+        # unloadingLocation
+        if (match(linea, /"unloadingLocation":\{(.*)\}/, resultado)) {
+            unloadingLocation= resultado[1];
+            if (match(unloadingLocation, /"radius":([0-9]+)/, resultado)) {
+                radius=resultado[1];
+            } else { radius = ""}
+            if (match(unloadingLocation, /"latitude":(-?[0-9]+\.[0-9]+)/, resultado)) {
+                latitude=resultado[1];
+                gsub(/\./, ",", latitude)
+            } else { latitude = ""}
+            if (match(unloadingLocation, /"longitude":(-?[0-9]+\.[0-9]+)/, resultado)) {
+                longitude=resultado[1];
+                gsub(/\./, ",", longitude)
+            } else { longitude = ""}
+        } else { unloadingLocation= ""; }
+       
+
+
     
        # me quedo con las variables guardadas y voy a la siguiente linea, que debe ser la respuesta
         next;
@@ -132,7 +151,7 @@ BEGIN {
         } else { httpstatus = ""; }
 
         # imprimo en una linea todos los datos separados por ; para que funcione como archivo csv
-        print "STo;" fechahora ";" tipo ";" tiponum ";" metodo ";" api ";" apisola ";" httpstatus ";" host ";" msgId ";" sttVersion ";" timeStamp ";" subOrgID ";" requestID ";" vehicleNumber ";" syncrotessDeliveryNumber ";" syncrotessDeliveryNumberCancel ";" orderSubType ";" locationID ";" reasonCode;
+        print "STo;" fechahora ";" tipo ";" tiponum ";" metodo ";" api ";" apisola ";" httpstatus ";" host ";" msgId ";" sttVersion ";" timeStamp ";" subOrgID ";" requestID ";" vehicleNumber ";" syncrotessDeliveryNumber ";" syncrotessDeliveryNumberCancel ";" orderSubType ";" locationID ";" reasonCode ";" radius ";" latitude ";" longitude ;
     }
 
 }
