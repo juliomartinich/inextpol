@@ -100,11 +100,11 @@ log['estado'] = ( log['log'].fillna('')
 print("5. pongo las etapas del archivo de etapas")
 etapas = pd.read_excel("etapas.xls")
 # Realizar el join entre logord y etapas usando las columnas log, apisola, status y deliveryType
-log_merged = pd.merge(log, etapas[['log', 'apisola', 'status', 'deliveryType', 'etapa']],
+log_merged = pd.merge(log, etapas[['log', 'apisola', 'status', 'deliveryType', 'etapa','orden']],
                          on=['log', 'apisola', 'status', 'deliveryType'],
                          how='left')  # 'left' mantiene todas las filas de logord
 
-columns_to_move = ['ID', 'log','fechahora','mseg','S','F','T','etapa','estado','rtruck','truckId','SIGU','orderNo','erpTicketNumber','orderSubType','rsdn','syncrotessDeliveryNumber','shipPoint','locationID','deliveryQuantity','reuseQuantity','reasonCode','nrofunc','licensePlate','metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType','detail']
+columns_to_move = ['ID', 'log','fechahora','orden','S','F','T','etapa','estado','rtruck','truckId','SIGU','orderNo','erpTicketNumber','orderSubType','rsdn','syncrotessDeliveryNumber','shipPoint','locationID','deliveryQuantity','reuseQuantity','reasonCode','nrofunc','licensePlate','metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType','detail']
 remaining_columns = [col for col in log.columns if col not in columns_to_move]
 new_column_order = columns_to_move + remaining_columns
 
