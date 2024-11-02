@@ -9,7 +9,7 @@
 #
 # el bloque BEGIN se ejecuta una sola vez, lo uso para poner los titulos, con ; para que sea un archivo csv leible en excel
 BEGIN { 
-    print "log;fechahora;mseg;tipo;tiponum;metodo;api;apisola;httpstatus;host;msgId;version;timeStamp;subOrgID;requestID;licensePlate;syncrotessDeliveryNumber;syncrotessDeliveryNumberCancel;orderSubType;locationID;reasonCode;radius;latitude;longitude";
+    print "log;fechahora;mseg;tipo;tiponum;metodo;api;apisola;httpstatus;host;msgId;version;timeStamp;subOrgID;requestID;licensePlate;syncrotessDeliveryNumber;syncrotessDeliveryNumberCancel;orderSubType;locationID;reasonCode;radius;latitude;longitude;erpTicketNumber";
 }
 #
 # este bloque se ejecuta para cada línea de entrada, $0 es la línea completa, $1, $2, ... son los tokens separados por espacio
@@ -118,6 +118,11 @@ BEGIN {
             syncrotessDeliveryNumber = syncrotessDeliveryNumberCancel;
         }
 
+        # erpTicketNumer en assignment (lo que está entre comillas y que no sea comillas)
+        if (match(linea, /"erpTicketNumber":"([^"]+)"/, resultado)) {
+            erpTicketNumber= resultado[1];
+        } else { erpTicketNumber= ""; }
+
         # unloadingLocation
         if (match(linea, /"unloadingLocation":\{(.*)\}/, resultado)) {
             unloadingLocation= resultado[1];
@@ -151,7 +156,7 @@ BEGIN {
         } else { httpstatus = ""; }
 
         # imprimo en una linea todos los datos separados por ; para que funcione como archivo csv
-        print "STo;" fechahora ";" tipo ";" tiponum ";" metodo ";" api ";" apisola ";" httpstatus ";" host ";" msgId ";" sttVersion ";" timeStamp ";" subOrgID ";" requestID ";" vehicleNumber ";" syncrotessDeliveryNumber ";" syncrotessDeliveryNumberCancel ";" orderSubType ";" locationID ";" reasonCode ";" radius ";" latitude ";" longitude ;
+        print "STo;" fechahora ";" tipo ";" tiponum ";" metodo ";" api ";" apisola ";" httpstatus ";" host ";" msgId ";" sttVersion ";" timeStamp ";" subOrgID ";" requestID ";" vehicleNumber ";" syncrotessDeliveryNumber ";" syncrotessDeliveryNumberCancel ";" orderSubType ";" locationID ";" reasonCode ";" radius ";" latitude ";" longitude ";" erpTicketNumber ;
     }
 
 }

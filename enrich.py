@@ -82,37 +82,58 @@ print("4. si el delivery number termina en _returnRun pongo sufijo RR al assignm
 for i in range(len(log)):
     sdn      = log.at[i, 'syncrotessDeliveryNumber']
     apisola  = log.at[i, 'apisola']
+    # si el assignment tiene erpTicketNumber entonces es la asignación cargado (LD)
+    if pd.notna(log.at[i, 'erpTicketNumber']) and log.at[i, 'apisola'] == "assignment":
+      log.at[i, 'apisola'] = apisola + "LD"
     if pd.notna(sdn):
       if sdn.endswith('_returnRun'):
         log.at[i, 'apisola'] = apisola + "RR"
         log.at[i, 'rsdn'] = sdn[:-len('_returnRun')]
 
+
+
 # Concatenar apisola y status, agregando un espacio antes del status si no es NaN
-log['estado'] = ( log['log'].fillna('')
-                + log['apisola'].apply(lambda x: f"-{x}" if pd.notna(x) else '') 
-                + log['status'].apply(lambda x: f"-{x}" if pd.notna(x) else '') 
-                + log['statusSource'].apply(lambda x: f"-{x}" if pd.notna(x) else '') 
-                + log['deliveryType'].apply(lambda x: f"-{x}" if pd.notna(x) else '')
-                + log['httpstatus'].str[:3].apply(lambda x: f"-{x}" if pd.notna(x) else '')
-                )
+#log['estado'] = ( log['log'].fillna('')
+                #+ log['apisola'].apply(lambda x: f"-{x}" if pd.notna(x) else '') 
+                #+ log['status'].apply(lambda x: f"-{x}" if pd.notna(x) else '') 
+                #+ log['statusSource'].apply(lambda x: f"-{x}" if pd.notna(x) else '') 
+                #+ log['deliveryType'].apply(lambda x: f"-{x}" if pd.notna(x) else '')
+                #+ log['httpstatus'].apply(lambda x: f"-{x[:3]}" if isinstance(x, str) else x)
+                #)
+                #+ log['httpstatus'].str[:3].apply(lambda x: f"-{x}" if pd.notna(x) else '')
+
+log['estado'] = (
+    log['log'].fillna('') +
+    log['apisola'].apply(lambda x: f"-{x}" if pd.notna(x) else '') +
+    log['status'].apply(lambda x: f"-{x}" if pd.notna(x) else '') +
+    log['statusSource'].apply(lambda x: f"-{x}" if pd.notna(x) else '') +
+    log['deliveryType'].apply(lambda x: f"-{x}" if pd.notna(x) else '') +
+    log['httpstatus'].apply(lambda x: f"-{str(x)[:3]}" if pd.notna(x) and isinstance(x, str) else '')
+)
+
 
 # agrego el campo etapa
 print("5. pongo las etapas del archivo de etapas")
-etapas = pd.read_excel("etapas.xls")
+etapas = pd.read_excel("etapas.xls", dtype={"orden": "Int64"})
 # Realizar el join entre logord y etapas usando las columnas log, apisola, status y deliveryType
 log_merged = pd.merge(log, etapas[['log', 'apisola', 'status', 'deliveryType', 'etapa','orden']],
                          on=['log', 'apisola', 'status', 'deliveryType'],
                          how='left')  # 'left' mantiene todas las filas de logord
 
-columns_to_move = ['ID', 'log','fechahora','orden','S','F','T','etapa','estado','rtruck','truckId','SIGU','orderNo','erpTicketNumber','orderSubType','rsdn','syncrotessDeliveryNumber','shipPoint','locationID','deliveryQuantity','reuseQuantity','reasonCode','nrofunc','licensePlate','metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType','detail']
+log_merged["orden"] = log_merged["orden"].astype("Int64")
+log_merged["rtruck"] = log_merged["rtruck"].astype("Int64")
+log_merged["truckId"] = log_merged["truckId"].astype("Int64")
+log_merged["erpTicketNumber"] = log_merged["erpTicketNumber"].astype("Int64")
+
+columns_to_move = ['ID', 'log','fechahora','orden','etapa','estado','rtruck','truckId','erpTicketNumber','orderSubType','rsdn','syncrotessDeliveryNumber','detail','shipPoint','locationID','deliveryQuantity','reuseQuantity','reasonCode','nrofunc','licensePlate','metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType']
 remaining_columns = [col for col in log.columns if col not in columns_to_move]
 new_column_order = columns_to_move + remaining_columns
 
 logord = log_merged[new_column_order]
 
 # rtruck decimal point is comma
-print("cambio punto decimal por coma en rtruck")
-logord['rtruck'] = logord['rtruck'].apply(lambda x: x.replace('.', ',') if isinstance(x, str) and x else x)
+#print("cambio punto decimal por coma en rtruck")
+#logord['rtruck'] = logord['rtruck'].apply(lambda x: x.replace('.', ',') if isinstance(x, str) and x else x)
 
 
 print("el resultado queda en logenrich.csv")
