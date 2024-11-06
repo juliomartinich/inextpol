@@ -114,10 +114,22 @@ resultados_combinados = resultados_faltas.merge(
     how='outer'  # Puedes usar 'inner' si solo deseas las coincidencias
 )
 
+resultados_cancel = (
+    logord1.groupby(['rtruck', 'rsdn'])['etapanum']
+    .apply(lambda x: 'cancelado' if 11 in x.values else 'nocancel')
+    .reset_index(name='cancelados')
+)
+
+resultados_combinados2 = resultados_combinados.merge(
+    resultados_cancel,
+    on=['rtruck', 'rsdn'],
+    how='outer'  # Puedes usar 'inner' si solo deseas las coincidencias
+)
+
 # Muestra el resultado
 print("el resultado queda en malosbuenos.csv")
 print("-------------------------------------------")
-resultados_combinados.to_csv("malosbuenos.csv", sep=";", decimal=",", header=True, na_rep="", index=False)
+resultados_combinados2.to_csv("malosbuenos.csv", sep=";", decimal=",", header=True, na_rep="", index=False)
 
 
 
