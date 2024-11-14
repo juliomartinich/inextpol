@@ -1,8 +1,11 @@
 # coding: utf-8
-# inicio pruebas de cargar directo un excel y cambiar los nombres de variables acá
-# 2024-oct-13 lógica para cambiar el returnRun como estado, y dejar en rsdn el ticket original
-#             perfecciono la columna estado
-#         -14 agrego un campo etapa a partir de un archivo excel etapasS.xls
+# pone los deltas entre etapas y pasos de cada etapa
+# crea las columnas tetapa, dif2, difetapa, dif3
+# tetapa   = cada vez que orden = 1 (inicio de cada etapa), se resetea este valor, a partir de fechahora
+# dif2     = igual a tetapa si orden =1, diferencia de tiempo del ultimo valor de tiempo si no es 1
+# difetapa = diferencia de tiempos entre etapas (cada vez que orden = 1)
+# dif3     = tiempo absoluto en asignación, diferencia de tiempo entre etapas a continuación
+# además crea la columna trans con las transicione cortas (< 30 segundos)
 import numpy as np
 import pandas as pd
 
@@ -19,8 +22,6 @@ print("-------------------------------------------")
 print("leo logenrichif.csv")
 # la primera columna trae el indice que se exportó, lo renombro como ID
 log = pd.read_csv("logenrichf.csv", delimiter=";", low_memory=False, index_col=0)
-log.reset_index(inplace=True)
-log.rename(columns={'index': 'ID'}, inplace=True)
 
 # Ordenar el DataFrame según las columnas especificadas
 log = log.sort_values(by=['rtruck', 'fechahora', 'etapa', 'orden'])
@@ -60,76 +61,25 @@ log['dif3'] = np.where(
 )
 
 log['detailsn'] = log['detail'].str.replace(r'\d+', 'XX', regex=True)
+log['etapanum'] = log['etapa'].fillna('00').str[:2].astype(int)
 
-columns_to_move = ['rtruck','etapa','orden','fechahora','tetapa','dif2','difetapa','dif3','trans','estado','rsdn','truckId','erpTicketNumber','orderSubType','syncrotessDeliveryNumber','detailsn','shipPoint','locationID','deliveryQuantity','reuseQuantity','reasonCode','nrofunc','licensePlate','metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType']
+columns_to_move = ['rtruck','etapa','etapanum','orden','fechahora','tetapa','dif2','difetapa','dif3','trans','estado','rsdn','truckId','erpTicketNumber','orderSubType','syncrotessDeliveryNumber','detailsn','shipPoint','locationID','deliveryQuantity','reuseQuantity','reasonCode','nrofunc','licensePlate','metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType']
 remaining_columns = [col for col in log.columns if col not in columns_to_move]
 new_column_order = columns_to_move + remaining_columns
     
 logord = log[new_column_order]
 
 print("el resultado queda en logetapa.csv")
-print("-------------------------------------------")
+print("----------------------------------")
 logord.to_csv("logetapa.csv", sep=";", decimal=",", header=True, na_rep="", index=False)
 
+# --- filtro todos eventos iniciales de cada etapa, para testear falta de evento inicial
 logord1 = logord[logord['orden'] == 1]
-logord1['etapanum'] = logord1['etapa'].str[:2].astype(int)
 
-columns_to_move = ['rtruck','etapa','etapanum','orden','fechahora','tetapa','dif2','difetapa','dif3','trans','estado','rsdn','truckId','erpTicketNumber','orderSubType','syncrotessDeliveryNumber','detailsn','shipPoint','locationID','deliveryQuantity','reuseQuantity','reasonCode','nrofunc','licensePlate','metodo','api','apisola','httpstatus','status','statusSource', 'deliveryType']
-remaining_columns = [col for col in log.columns if col not in columns_to_move]
-new_column_order = columns_to_move + remaining_columns
+print("el resultado del inicio de cada etapa queda en logetapa1.csv")
+print("------------------------------------------------------------")
+logord1.to_csv("logetapa1.csv", sep=";", decimal=",", header=True, na_rep="", index=False)
 
-logord2 = logord1[new_column_order]
-
-print("el resultado queda en logetapa1.csv")
-print("-------------------------------------------")
-logord2.to_csv("logetapa1.csv", sep=";", decimal=",", header=True, na_rep="", index=False)
-
-# Define el rango de interés
-etapas_interes = set(range(5, 11))
-
-# Función para verificar etapas
-def verificar_etapas(grupo):
-    etapas_presentes = set(grupo['etapanum']).intersection(etapas_interes)
-    if etapas_interes - etapas_presentes:
-        return 'falta'
-    else:
-        return 'bueno'
-
-# Aplica la verificación para cada combinación de rtruck y rsdn
-resultados_faltas = (
-    logord1.groupby(['rtruck', 'rsdn'])
-    .apply(verificar_etapas)
-    .reset_index(name='faltas')
-)
-
-resultados_cortos = (
-    logord1.groupby(['rtruck', 'rsdn'])['trans']
-    .apply(lambda x: 'malo' if 'corto' in x.values else 'bueno')
-    .reset_index(name='cortos')
-)
-
-resultados_combinados = resultados_faltas.merge(
-    resultados_cortos,
-    on=['rtruck', 'rsdn'],
-    how='outer'  # Puedes usar 'inner' si solo deseas las coincidencias
-)
-
-resultados_cancel = (
-    logord1.groupby(['rtruck', 'rsdn'])['etapanum']
-    .apply(lambda x: 'cancelado' if 11 in x.values else 'nocancel')
-    .reset_index(name='cancelados')
-)
-
-resultados_combinados2 = resultados_combinados.merge(
-    resultados_cancel,
-    on=['rtruck', 'rsdn'],
-    how='outer'  # Puedes usar 'inner' si solo deseas las coincidencias
-)
-
-# Muestra el resultado
-print("el resultado queda en malosbuenos.csv")
-print("-------------------------------------------")
-resultados_combinados2.to_csv("malosbuenos.csv", sep=";", decimal=",", header=True, na_rep="", index=False)
 
 
 
