@@ -98,6 +98,7 @@ BEGIN { print "log;fechahora;mseg;tipo;numero;tiponum;metodo;host;host2;api;apis
         # Busca mensaje (idem)
         if (match($0, /"messageText":"([^"]+)"/, resultado)) {
             mess = resultado[1];
+            gsub(/;/, "", mess);
         } else { mess = ""; }
     
         # Busca eta (idem)
